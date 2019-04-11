@@ -1,0 +1,130 @@
+n1			DCD		0x40400000
+n2			DCD		0xc0380000
+			
+			ldr		R1, =n1				;R1=endereço
+			;mov		R2, #2
+			ldr		R2, [R1]				;R2=n1
+			ldr		R1, =n2
+			ldr		R3, [R1]				;R3=n2
+			cmp		R2, #0
+			moveq	R0,R3
+			beq		fim
+			cmp		R3, #0				;ponto 1 check
+			moveq	R0,R2
+			beq		fim
+			
+			mov		R0, R2				;R10=n1
+			bl		expoentereal
+			mov		R4,R0				;R4= expoente real de n1
+			mov		R0,R3
+			bl		expoentereal
+			mov		R5,R0				;R5= expoente real de n2
+			
+			mov		R0, R2
+			bl		mantissa
+			mov		R7,R0				;R7=mantissa de n1
+			mov		R0, R3
+			bl		mantissa
+			mov		R8,R0				;R8=mantissa de n2
+			
+			
+			mov		R0, R2
+			bl		sinal
+			mov		R9,R0				;R9=Sinal de n1
+			mov		R0,R3
+			bl		sinal
+			mov		R10,R0				;R10=Sinal de n2
+			
+			subs		R6,R4,R5				;R6= diferença dos expoentes    PONTO 2 CHECK
+			beq		passo4				;Não precisa de alinhar a mantissa
+			blmi		AM1					;Alinhar mantissa de n1
+			blpl		AM2					;Alinhar mantissa de n2
+			
+passo4		bl		maiores
+			
+			
+			cmp		R9,R10
+			bleq		somar				;R11= mantissa final
+			blne		subtrair				;R12=sinal final(c/32 bits)
+			
+			mov		R0,R2				;R2=maior mantissa
+			bl		zero_d				;calcula zeros à direita
+			mov		R2,R1				;R2=numero de zeros que R8 tem à esquerda
+			mov		R0,R11
+			bl		zero_d
+			mov		R3,R1				;R3=numero de zeros que R11 tem à esquerda
+			mov		R11,R0
+			lsr		R11,R11,#9
+			
+			
+			subs		R4,R2,R3				;R4=diferença de 0 à esquerda
+			beq		nao_alinha
+			add		R6,R6,R4
+			
+nao_alinha	add		R6,R6,#127
+			lsl		R6,R6,#23				;R6= expoente final
+			
+			mov		R0,#0
+			add		R0,R6,R11
+			add		R0,R0,R12
+fim			end
+			
+			
+			
+			
+sinal		lsr		R0,R0, #31
+			mov		PC,LR
+			
+expoentereal	lsl		R0,R0,#1
+			lsr		R0,R0,#24
+			sub		R0,R0,#127
+			mov		PC, LR
+			
+mantissa		lsl		R0,R0,#9
+			lsr		R0,R0,#9
+			add		R0,R0,#8388608
+			mov		PC,LR
+			
+AM1			rsb		R6,R6,#0
+			lsr		R7,R7,R6
+			mov		R6,R5				;R6=maior expoente
+			mov		R2,R8				;R2=maior mantissa
+			mov		PC,LR
+			
+AM2			lsr		R8,R8,R6
+			mov		R6,R4				;R6=maior expoente
+			mov		R2,R7				;R2=maior mantissa
+			mov		PC,LR
+			
+maiores		subs		R6,R4,R5
+			bmi		maior2
+			mov		R6,R4				;R6=maior expoente
+			mov		R2,R7				;R2=maior mantissa
+			b		maiores_fim
+maior2		mov		R6,R5				;R6=maior expoente
+			mov		R2,R8				;R2=maior mantissa
+maiores_fim	mov		PC,LR
+			
+somar		add		R11,R7,R8
+			lsl		R12,R9,#31
+			mov		PC,LR
+			
+subtrair		cmp		R7,R8
+			
+			bpl		maior1
+			sub		R11,R8,R7
+			lsl		R12,R10,#31
+			b		fim_sub
+			
+maior1		sub		R11,R7,R8
+			lsl		R12,R9,#31
+fim_sub		mov		PC,LR
+			
+zero_d		mov		R1,#0
+zero_ciclo	lsls		R0,R0,#1
+			bcs		zero_fim
+			add		R1,R1,#1
+			b		zero_ciclo
+zero_fim		mov		PC,LR
+			
+			

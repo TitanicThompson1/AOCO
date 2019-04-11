@@ -1,0 +1,111 @@
+NumA				DCD		0x40900000, 0x42040000 ,0xc20a0000 ,0xc0380000 ,0x420c0000, 0x00000000,0x83800000 ,0x40400000  	;Main body de P$
+NumB				DCD		0xc0700000, 0xc0380000 ,0xc1200000 ,0x42040000 ,0x42040000 ,0xc0380000 ,0x00000000 ,0xc0380000
+Somas			FILL		32
+Subtracoes		FILL		32
+Multiplicacoes		FILL		32
+				
+				
+				mov		R10, #0
+ciclo			cmp		R10, #32
+				beq		fim
+				ldr		R0, =NumA
+				ldr		R2, [R0,R10]				;R2=NumA
+				ldr		R1, =NumB
+				ldr		R3, [R1,R10]				;R3=NumB
+				
+				cmp		R2,#0					;passo1
+				beq		fim_ciclo
+				cmp		R3,#0
+				beq		fim_ciclo
+				
+				mov		R1,R2
+				bl		sinal
+				mov		R4,R0					;R4=sinal NumA
+				mov		R1,R3
+				bl		sinal
+				mov		R5,R0					;R5=sinal	NumB
+				
+				cmp		R4,R5					;Passo2
+				moveq	R6,#0
+				movne	R6,#1					;R6=sinal final
+				
+				mov		R1,R2
+				bl		expoentereal
+				mov		R4,R0					;R4=expoente NumA
+				mov		R1,R3
+				bl		expoentereal
+				mov		R5,R0					;R5=expoente NumB
+				
+				add		R7,R4,R5					;passo3 R7=expoente final
+				
+				mov		R1,R2
+				bl		mantissa
+				mov		R4,R0					;R4=mantissa NumA
+				mov		R1,R3
+				bl		mantissa
+				mov		R5,R0					;R5=mantissa NumB
+				
+				mov		R0,R4
+				mov		R1,R5
+				bl		calcshiftbits
+				mov		R2,R0					;R2=shif a aplicar
+
+				lsr		R0,R4,R2
+				lsr		R1,R5,R2
+				bl		peasantmul				;R9=mantissafinal
+
+				bl 		normaliza
+
+
+				
+				lsl		R9,R9,R2					;passo6
+				add		R7,R7,#127
+				lsl		R7,R7,#23
+				lsl		R6,R6,#31
+				
+				
+fim_ciclo			add		R10,R10, #4
+				b		ciclo
+				
+				
+sinal			lsr		R0,R1, #31
+				mov		PC,LR
+				
+expoentereal		lsl		R0,R1,#1
+				lsr		R0,R0,#24
+				sub		R0,R0,#127
+				mov		PC, LR
+				
+mantissa			lsl		R0,R1,#9
+				lsr		R0,R0,#9
+				add		R0,R0,#8388608
+				mov		PC,LR
+				
+peasantmul		mov		R9,R0
+ciclo			cmp		R0,#0
+				beq		peasant_fim
+				lsrs		R0,R0,#1		
+				bcc		ciclo
+				add		R9,R9,R0
+				b		ciclo
+peasant_fim		mov		PC,LR
+
+				
+calcshiftbits		mov		R2, #0			;Esta sub-rotina calcula o menor numero de 0 existentes, à direita,
+calcshifbits_ciclo	lsrs		R0,R0,#1			;de 2 nº numeros(R0 e R1)
+				bcs		calcshiftbits_fim
+				lsrs		R1,R1,#1
+				bcs		calcshiftbits_fim
+				add		R2,R2,#1
+				b		calcshifbits_ciclo
+calcshiftbits_fim	mov		R0,R2
+				mov		PC,LR
+				
+				
+				
+zero_e		mov		R1,#0
+zero_ciclo	lsls		R0,R0,#1
+			bcs		zero_fim
+			add		R1,R1,#1
+			b		zero_ciclo
+zero_fim		mov		PC,LR

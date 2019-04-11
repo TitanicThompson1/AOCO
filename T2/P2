@@ -1,0 +1,37 @@
+Aux			DCD		0xc20a0000, 0x007fffff, 0x7fffffff
+tamanho		DCD		3
+			
+			ldr		R2, =tamanho
+			ldr		R1,[R2]         ;R1=numero de elementos
+			ldr		R2, =Aux
+			
+ciclo		cmp		R1, #0
+			beq		fin
+			ldr		R6,[R2]		 ;R6= elemento em R2
+			bl		sinal
+			mov		R3, R0
+			bl		expoentereal
+			mov		R4, R0
+			bl		mantissa
+			mov		R5,R0
+			add		R2,R2,#4
+			sub		R1,R1,#1
+			b		ciclo
+			
+fin			END
+			
+sinal		lsr		R0,R6, #31
+			mov		PC,LR
+			
+expoentereal	lsl		R0,R6,#1
+			lsr		R0,R0,#24
+			sub		R0,R0,#127
+			mov		PC, LR
+			
+mantissa		lsl		R0,R6,#9
+			lsr		R0,R0,#9
+			add		R0,R0,#8388608
+			mov		PC,LR
+			
+			
+			

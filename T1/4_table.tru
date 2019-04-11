@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<truthTable>
+  <variables>
+    <variable name="AS"/>
+    <variable name="sA"/>
+    <variable name="sB"/>
+    <variable name="sR"/>
+  </variables>
+  <results>
+    <result>
+      <name>OVF</name>
+      <values class="BoolTable">
+        <table>AAEAAAAAAQAAAAABAQAAAA==</table>
+      </values>
+    </result>
+  </results>
+</truthTable>

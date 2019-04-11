@@ -1,0 +1,70 @@
+Subtração:   
+
+cmp     R1, #0
+eorne   R1, #0x80000000
+mov     R12, LR
+bl      soma
+mov     PC, R12
+
+
+------------------------------------------
+
+Ea + Eb -46+2*S
+
+------------------------------------------
+
+Calcshiftbits:      mov   R2, #0			;Esta sub-rotina calcula o menor numero de 0 existentes, à direita, 
+calcshifbits_ciclo  lsrs  R0,R0,#1			;de 2 nº numeros(R0 e R1)
+		    bcs   calcshiftbits_fim
+		    lsrs  R1,R1,#1
+		    bcs   calcshiftbits_fim
+ 		    add	  R2,R2,#1
+		    b     calcshifbits_ciclo 
+calcshiftbits_fim   mov   R0,R2
+		    mov   PC,LR    
+
+------------------------------------------
+
+NumA  	    	DCD  		0x40900000, 0x...	;Main body de P$
+NumB  	    	DCD  		0xc0700000, 0x...
+Somas       	FILL 		32
+Subtracoes  	FILL		32
+Multiplicacoes  FILL		32
+		mov		R10, #0
+ciclo		cmp		R10, #32
+		beq		fim
+		ldr		R0, =NumA
+		ldr		R0, [R0,R10]
+		ldr		R1, =NumB
+		ldr 		R1, [R1,R10]
+		bl		soma
+		ldr		R1, Somas
+		str		R0, [R1,R10]
+...subtracoes...
+...multiplicaçoes...
+		add 		R10,R10, #4
+		b 		ciclo
+fim :		end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+			
+
+
+
+
+
